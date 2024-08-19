@@ -57,3 +57,37 @@ tbl_summary(
 	modify_footnote(update = everything() ~ NA) |>
 	modify_header(label = "**Variable**", p.value = "**P**")
 
+#income, 10 and 90 percentile
+tbl_summary(
+	nlsy,
+	by = sex_cat,
+	include = c(sex_cat, race_eth_cat,
+							 income, sleep_wkdy, sleep_wknd),
+	label = list(
+		race_eth_cat ~ "Race/ethnicity",
+		income ~ "Income",
+		sleep_wkdy ~ "Weekday Sleep",
+		sleep_wknd ~ "Weekend Sleep"),
+		missing_text = "Missing",
+	statistic=list(
+		income ~ "min = {p10}, max = {p90}",
+		sleep_wkdy ~ "min = {min}, max = {max}",
+		sleep_wknd ~ "min = {min}, max = {max}"
+	),
+	digits=list(
+		income ~ c(3,3),
+		sleep_wkdy~ c(1,1),
+		sleep_wknd ~ c(1,1)
+	)) |>
+	add_p(test = list(all_continuous() ~ "t.test",
+										all_categorical() ~ "chisq.test")) |>
+	 add_overall(col_label = "**Total**") |>
+	 bold_labels() |>
+	modify_table_styling(
+		columns=label,
+		rows= label=="Race/ethnicity",
+	footnote= "https://www.nlsinfo.org/content/cohorts/nlsy79/topical-guide/household/race-ethnicity-immigration-data") |>
+	modify_header(label = "**Variable**", p.value = "**P**")
+#**xxx** makes it bold
+
+

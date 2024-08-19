@@ -1,5 +1,7 @@
 library(tidyverse)
 library(gtsummary)
+install.packages("broom.helpers")
+library(broom.helpers)
 
 nlsy_cols <- c("glasses", "eyesight", "sleep_wkdy", "sleep_wknd",
 							 "id", "nsibs", "samp", "race_eth", "sex", "region",
@@ -7,7 +9,7 @@ nlsy_cols <- c("glasses", "eyesight", "sleep_wkdy", "sleep_wknd",
 nlsy <- read_csv(here::here("data", "raw", "nlsy.csv"),
 								 na = c("-1", "-2", "-3", "-4", "-5", "-998"),
 								 skip = 1, col_names = nlsy_cols) |>
-	mutate(region_cat = factor(region, labels = c("Northeast", "North Central", "South", "West")),
+mutate(region_cat = factor(region, labels = c("Northeast", "North Central", "South", "West")),
 				 sex_cat = factor(sex, labels = c("Male", "Female")),
 				 race_eth_cat = factor(race_eth, labels = c("Hispanic", "Black", "Non-Black, Non-Hispanic")),
 				 eyesight_cat = factor(eyesight, labels = c("Excellent", "Very good", "Good", "Fair", "Poor")),
@@ -95,3 +97,47 @@ tbl_int <- tbl_regression(
 
 tbl_merge(list(tbl_no_int, tbl_int),
 					tab_spanner = c("**Model 1**", "**Model 2**"))
+
+#Same predictor multiple outcomes
+tbl_uvregression(
+	nlsy,
+	x = sex_cat,
+	include = c(nsibs, sleep_wkdy,
+							sleep_wknd, income),
+	method = lm)
+
+#Poission regression
+tbl_uvregression(
+	nlsy,
+	y = nsibs,
+	include = c(sex_cat, race_eth_cat,
+							region),
+	method = glm,
+	method.args = list(family = poisson()),
+	exponentiate = TRUE)
+
+#Risk ratio
+tbl_bin<- tbl_uvregression(
+	nlsy,
+	y = glasses,
+	include = c(sex_cat,
+							eyesight_cat),
+	method = glm,
+	method.args = list(family = binomial(link = "log")),
+	exponentiate = TRUE)
+
+#Risk ratio poission
+tbl_pois <- tbl_uvregression(
+	nlsy,
+	y = glasses,
+	include = c(sex_cat,
+							eyesight_cat),
+	method = glm,
+	method.args = list(family = poisson(link = "log")),
+	exponentiate = TRUE)
+
+tbl_merge(list(tbl_bin, tbl_pois),
+					tab_spanner = c("**Model 1**", "**Model 2**"))
+
+
+tidy_fun = partial(tidy_robust, vcov = "HC1")
