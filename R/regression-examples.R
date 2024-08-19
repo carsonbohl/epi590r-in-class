@@ -107,6 +107,18 @@ tbl_uvregression(
 	method = lm)
 
 #Poission regression
+poisson_model <- glm(glasses ~ race_eth_cat + sex_cat + region,
+										 data = nlsy, family = poisson())
+
+tbl_regression(
+	poisson_model,
+	exponentiate = TRUE,
+	label = list(
+		sex_cat ~ "Sex",
+		race_eth_cat ~ "Race/ethnicity",
+		region ~ "Income"
+	))
+
 tbl_uvregression(
 	nlsy,
 	y = nsibs,
